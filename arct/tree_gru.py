@@ -7,5 +7,5 @@ from torch import nn
 class BatchTreeGRUCell(nn.Module):
     def __init__(self):
         super(BatchTreeGRUCell, self).__init__()
-        self.
+        pass
 
