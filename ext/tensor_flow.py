@@ -99,34 +99,6 @@ def cross_entropy_with_l2(labels, logits, _lambda, parameters):
     return tf.add(cross_entropy, penalty_term, name='loss')
 
 
-def embed(vocab_length, embed_size, trainable):
-    """Get embedding infrastructure.
-
-    Args:
-      vocab_length: Integer, how many words in the embedding.
-      embed_size: Integer, how long is each embedding.
-      trainable: Boolean, whether or not to tune the embeddings.
-
-    Returns:
-      embeddings (Variable), embeddings_ph (placeholder), embeddings_init (op
-        for assigning the placeholder to the variable).
-    """
-    embeddings = tf.Variable(
-        tf.constant(0.0, shape=[vocab_length, embed_size]),
-        trainable=trainable,
-        name='embeddings')
-    embed_ph = tf.placeholder(tf.float32, [vocab_length, embed_size])
-    # This needs to be called by the trainer
-    embed_init = embeddings.assign(embed_ph)
-    return embeddings, embed_ph, embed_init
-
-
-def word2vec(embeddings, indices, p_keep):
-    vecs = tf.nn.embedding_lookup(embeddings, indices)
-    dropped_vecs = tf.nn.dropout(vecs, p_keep)
-    return dropped_vecs
-
-
 # Model
 
 
@@ -152,9 +124,7 @@ class TensorFlowModel(models.Model):
             config=config)
         self.vocab_dict = vocab_dict
         self.vocab_size = len(vocab_dict)
-        self.embed_mat = embed_mat
-        self.embeddings, self.embed_ph, self.embed_init = embed(
-            len(vocab_dict), config.embed_size, config.emb_train)
+        self.embeddings = tf.Variable(embed_mat, self.tune_embeddings)
         # Generate keep probability dict from config
         self.p_keep = {}
         for key in config.dropout_keys():
