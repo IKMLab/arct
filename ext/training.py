@@ -2,6 +2,7 @@
 import time
 import numpy as np
 import os
+from ext import histories
 
 
 # UTILITY FUNCTIONS
@@ -126,7 +127,7 @@ class Data:
 class TrainerBase:
     """Wraps a model and implements a train method."""
 
-    def __init__(self, model, history, train_data, tune_data):
+    def __init__(self, model, history, train_data, tune_data, dbi):
         """Create a new training wrapper.
 
         Args:
@@ -134,11 +135,13 @@ class TrainerBase:
           history: histories.History object for storing training statistics.
           train_data: the data to be used for training.
           tune_data: the data to be used for tuning; can be multiple data sets.
+          dbi: interface to mongo database for history saving.
         """
         self.model = model
         self.history = history
         self.train_data = train_data
         self.tune_data = tune_data
+        self.dbi = dbi
         self.batches_per_epoch = train_data.batches_per_epoch
         self.report_every = report_every(train_data.batches_per_epoch)
         # Load the latest checkpoint if necessary
@@ -156,7 +159,7 @@ class TrainerBase:
             self.history.end_epoch(time_taken)
         self._report_epoch(avg_time, avg_loss, change_loss)
         self._checkpoint(is_best)
-        self.history.save()
+        self._save_history()
 
     def _end_step(self, loss, acc):
         self.step_end = time.time()
@@ -195,6 +198,12 @@ class TrainerBase:
                      pretty_time(avg_time
                                  * steps_remaining(self.batches_per_epoch,
                                                    global_step))))
+
+    def _save_history(self):
+        if self.dbi.history.train.exists(_id=self.history.name):
+            self.dbi.history.train.update(self.history.to_json())
+        else:
+            self.dbi.history.train.add(self.history.to_json())
 
     def _start_epoch(self):
         _print_epoch_start(self.history.global_epoch)

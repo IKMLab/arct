@@ -23,11 +23,11 @@ WORD_VECS = {
     },
     'fast': {
         'wiki': {
-            300: ''},
+            300: 'wiki-news-300d-1M.vec'},
         'sub': {
-            300: ''},
+            300: 'wiki-news-300d-1M-subword.vec'},
         'crawl': {
-            300: ''}
+            300: 'crawl-300d-2M.vec'}
     }}
 PADDING = "<PAD>"
 UNKNOWN = "<UNK>"
@@ -57,7 +57,8 @@ def create_embeddings(vocab, emb_fam, emb_type, emb_size, emb_dir):
     vocab_size = max(vocab.values()) + 1
     print('vocab_size = %s' % vocab_size)
     oov_count = vocab_size  # subtract as we find them
-    embeddings = np.random.normal(size=(vocab_size, emb_size))
+    embeddings = np.random.normal(size=(vocab_size, emb_size))\
+        .astype('float32', copy=False)
     with open(emb_dir + WORD_VECS[emb_fam][emb_type][emb_size],
               'r', encoding='utf-8') as f:
         for i, line in enumerate(f):
@@ -94,6 +95,10 @@ def create_vocab_dict(text):
     doc = nlp(text)
     counter = collections.Counter()
     counter.update([t.text for t in doc])
-    tokens = set([t for t in counter] + [PADDING, UNKNOWN, LBR, RBR])
-    vocab_dict = dict(zip(tokens, range(len(tokens))))
+    tokens = set([t for t in counter] + [UNKNOWN, LBR, RBR])
+    # Make sure 0 is padding.
+    vocab_dict = dict(zip(tokens, range(1, len(tokens) + 1)))
+    assert PADDING not in vocab_dict.keys()
+    assert 0 not in vocab_dict.values()
+    vocab_dict[PADDING] = 0
     return vocab_dict, counter

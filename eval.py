@@ -2,8 +2,19 @@ import tensorflow as tf
 import numpy as np
 
 
+def length(sequence):
+    """
+    Courtesy of Danijar Hafner:
+    https://danijar.com/variable-sequence-lengths-in-tensorflow/
+    """
+    used = tf.sign(tf.reduce_max(tf.abs(sequence), reduction_indices=1))
+    l = tf.reduce_sum(used, reduction_indices=1)
+    l = tf.cast(l, tf.int32)
+    return l
+
+
 _r = np.array([[1, 0], [2, 1]])
-_c = np.array([[2, 0], [1, 1]])
+_c = np.array([[2, 1], [1, 0]])
 _w = np.array([[1, 1], [2, 2]])
 _aw = np.array([[2, 1], [1, 2]])
 emb_mat = np.array([[0., 0., 0.], [1., 1., 1.], [2., 2., 2.]], dtype='float32')
@@ -15,6 +26,31 @@ w = tf.placeholder(tf.int32, [None, None], 'w')
 aw = tf.placeholder(tf.int32, [None, None], 'aw')
 
 fd = {r: _r, c: _c, w: _w, aw: _aw}
+
+# don't need abs, since all indices are positive
+# getting the sign gives a list of ones for all non-zero, non-paddings
+# then just need to find a way to sum over the right axis?
+
+s = tf.sign(c)
+l = tf.reduce_sum(s, axis=1)
+
+a = np.array([0.3, 0.5, 0.9])
+b = tf.placeholder(tf.float32, [3,])
+c = tf.cast(b > 0.5, tf.int32)
+
+with tf.Session() as sess:
+    sess.run(tf.global_variables_initializer())
+    x = sess.run(c, {b: a})
+    print(x)
+
+
+raise Exception
+
+
+l_r = length(r)
+l_c = length(c)
+l_w = length(w)
+l_aw = length(aw)
 
 _R = tf.nn.embedding_lookup(emb, r)  # [batch_size, sequence_length, embed_size]
 _C = tf.nn.embedding_lookup(emb, c)
@@ -74,12 +110,12 @@ logits = tf.matmul(args, W_eval) + b_eval
 
 with tf.Session() as sess:
     sess.run(tf.global_variables_initializer())
-    x, y = sess.run([args, logits], fd)
-    print('args')
+    x, y = sess.run([l_r, l_w], fd)
+    print('l_r')
     print(x)
     print(x.shape)
     print(x.dtype)
-    print('logits')
+    print('l_w')
     print(y)
     print(y.shape)
     print(y.dtype)

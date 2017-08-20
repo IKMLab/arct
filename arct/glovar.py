@@ -2,7 +2,11 @@
 import os
 
 
+ROOT_DIR = 'd:/'
+#ROOT_DIR = '/home/hanshan/'
 VEC_DIR = {
-    'glove': '/home/hanshan/dev/data/glove/',
-    'fast': '/home/hanshan/dev/data/fasttext'}
+    'glove': ROOT_DIR + 'dev/data/glove/',
+    'fast': ROOT_DIR + 'dev/data/fasttext/'}
 DATA_DIR = os.path.join(os.getcwd(), 'data/')
+MODELS = ['bilstm1']
+CKPT_DIR = os.path.join(DATA_DIR, 'ckpts/')

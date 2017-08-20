@@ -1,6 +1,6 @@
 """For tracking and saving training histories."""
 import numpy as np
-from coldnet import models
+from ext import models
 
 
 # UTILITY FUNCTIONS

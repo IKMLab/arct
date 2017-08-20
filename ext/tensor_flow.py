@@ -1,9 +1,8 @@
 """Base model and trainer for TensorFlow, plus utility functions."""
 import tensorflow as tf
-from coldnet import models, training
-from coldnet.tensor_flow import blocks
 import os
 import functools
+from ext import models, training
 
 
 # Utility Functions
@@ -83,7 +82,7 @@ def adam_with_grad_clip(learning_rate, loss, parameters, grad_clip_norm):
         grads_and_vars = clip_gradients(
             grads_and_vars=grads_and_vars,
             norm=grad_clip_norm)
-    optimizer.apply_gradients(grads_and_vars)
+    return optimizer.apply_gradients(grads_and_vars)
 
 
 def cross_entropy_with_l2(labels, logits, _lambda, parameters):
@@ -128,7 +127,8 @@ class TensorFlowModel(models.Model):
         # Generate keep probability dict from config
         self.p_keep = {}
         for key in config.dropout_keys():
-            self.p_keep[key.split('_')[-1]] = config[key]
+            name = key.split('_')[-1]
+            self.p_keep[name] = tf.placeholder(tf.float32, [], name=name)
         self.in_training = False
 
     def biases(self):
@@ -158,17 +158,21 @@ class TensorFlowModel(models.Model):
 
     @define_scope
     def correct_predictions(self):
-        return tf.equal(self.predictions, tf.argmax(self.labels, axis=0))
+        return tf.equal(self.predictions, tf.argmax(self.labels,
+                                                    axis=0,
+                                                    output_type=tf.int32))
 
     def dropout_feed_dict(self):
         dropout_keys = [key for key in self.config.keys()
                         if key.startswith('p_keep_')]
+        dropout_names = [key.split('_')[-1] for key in dropout_keys]
+        keys_names = dict(zip(dropout_keys, dropout_names))
         if self.in_training:
-            return {getattr(self, key): self.config[key]
-                    for key in dropout_keys}
+            return {self.p_keep[name]: self.config[key]
+                    for key, name in keys_names.items()}
         else:
-            return {getattr(self, key): 1.0
-                    for key in dropout_keys}
+            return {self.p_keep[name]: 1.0
+                    for name in dropout_names}
 
     def eval(self):
         self.in_training = False
@@ -191,10 +195,10 @@ class TensorFlowModel(models.Model):
 
     @define_scope
     def optimize(self):
-        adam_with_grad_clip(
+        return adam_with_grad_clip(
             learning_rate=self.learning_rate,
             loss=self.loss,
-            parameters=self.parameters(),
+            parameters=tf.get_collection(tf.GraphKeys.TRAINABLE_VARIABLES),
             grad_clip_norm=self.grad_clip_norm)
 
     def parameters(self):
@@ -224,15 +228,13 @@ class TensorFlowModel(models.Model):
 class TensorFlowTrainer(training.TrainerBase):
     """Base class for training TensorFlow models."""
 
-    def __init__(self, model, history, train_data, tune_data, ckpt_dir):
+    def __init__(self, model, history, train_data, tune_data, ckpt_dir, dbi):
         super(TensorFlowTrainer, self).__init__(
-            model, history, train_data, tune_data)
+            model, history, train_data, tune_data, dbi)
         self.ckpt_dir = ckpt_dir
         self.saver = tf.train.Saver()
         self.sess = tf.Session()
         self.sess.run(tf.global_variables_initializer())
-        self.sess.run(model.embed_init,
-                      feed_dict={model.embed_ph: model.embed_mat})
 
     def _checkpoint(self, is_best):
         path = training.model_path(self.ckpt_dir, self.history.name, is_best)

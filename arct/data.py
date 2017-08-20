@@ -6,6 +6,12 @@ from ext import pickling as pkl
 from ext import vocab_emb as ve
 
 
+"""
+4) need to pad the index sequences coming out of batching
+5) then can try and re-run training
+"""
+
+
 FILES = {
     'dev': 'dev-full.txt',
     'train': 'train-full.txt',
@@ -44,6 +50,15 @@ def text():
     dfs = [df('train'), df('dev')]
     texts = [df_text(d) for d in dfs]
     return ' '.join(texts)
+
+
+def train_and_tune_data():
+    df_train = df('train')
+    df_tune = df('dev')
+    cols = ['reason', 'claim', 'warrant0', 'warrant1', 'correctLabelW0orW1']
+    train_data = df_train[cols].values
+    tune_data = df_tune[cols].values
+    return train_data, tune_data
 
 
 def vocab():

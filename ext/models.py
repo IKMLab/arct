@@ -39,8 +39,6 @@ class Config:
         self.p_keep_input = self._value('p_keep_input', kwargs)
         self.p_keep_rnn = self._value('p_keep_rnn', kwargs)
         self.p_keep_fc = self._value('p_keep_fc', kwargs)
-        self.input_mode = self._value('input_mode', kwargs)
-        self.batch_mode = self._value('batch_mode', kwargs)
         self.tune_embeddings = self._value('tune_embeddings', kwargs)
         for key in [k for k in kwargs.keys()
                     if k not in self.default.keys()]:
