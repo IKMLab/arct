@@ -3,7 +3,7 @@ from ext import tensor_flow
 
 
 class BiLSTM1(tensor_flow.TensorFlowModel):
-    """BiLSTM encode-compose model with single hidden layer classifier."""
+    """BiLSTM encode-compose model with three hidden layers classifier."""
     def __init__(self, config, vocab_dict, embed_mat):
         super(BiLSTM1, self).__init__(config, vocab_dict, embed_mat)
 
@@ -26,6 +26,12 @@ class BiLSTM1(tensor_flow.TensorFlowModel):
             self.W_comp, self.b_comp = tensor_flow.layer_params(
                 8 * self.hidden_size, self.hidden_size, 'relu')
         with tf.name_scope('evaluate'):
+            self.W_eval1, self.b_eval1 = tensor_flow.layer_params(
+                self.hidden_size / 3, 1, 'relu')
+            self.W_eval2, self.b_eval2 = tensor_flow.layer_params(
+                self.hidden_size / 3, 1, 'relu')
+            self.W_eval3, self.b_eval3 = tensor_flow.layer_params(
+                self.hidden_size / 3, 1, 'relu')
             self.W_eval, self.b_eval = tensor_flow.layer_params(
                 self.hidden_size, 1, 'sigmoid')
 
@@ -71,11 +77,17 @@ class BiLSTM1(tensor_flow.TensorFlowModel):
         args_in = tf.nn.dropout(args_in, self.p_keep['input'])
 
         # learn intermediate representation
-        h1 = tf.nn.relu(tf.matmul(args_in, self.W_comp) + self.b_comp)
-        h1 = tf.nn.dropout(h1, self.p_keep['fc'])
+        c1 = tf.nn.relu(tf.matmul(args_in, self.W_comp) + self.b_comp)
+        c1 = tf.nn.dropout(c1, self.p_keep['fc'])
 
         # classify
-        logits = tf.sigmoid(tf.matmul(h1, self.W_eval) + self.b_eval)
+        h1 = tf.nn.relu(tf.matmul(c1, self.W_eval1) + self.b_eval1)
+        h1 = tf.nn.dropout(h1, self.p_keep['fc'])
+        h2 = tf.nn.relu(tf.matmul(h1, self.W_eval2) + self.b_eval2)
+        h2 = tf.nn.dropout(h2, self.p_keep['fc'])
+        h3 = tf.nn.relu(tf.matmul(h2, self.W_eval3) + self.b_eval3)
+        h3 = tf.nn.dropout(h3, self.p_keep['fc'])
+        logits = tf.sigmoid(tf.matmul(h3, self.W_eval) + self.b_eval)
 
         return logits
 
