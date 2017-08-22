@@ -1,4 +1,4 @@
-from arct import bilstm1, data, glovar, trainers, dbi
+from arct import bilstm2, data, glovar, trainers, dbi
 from ext import parameters, batching, models, histories
 
 
@@ -27,7 +27,7 @@ tune_batcher = batching.ShuffleBatchGenerator(config.batch_size, tune_data)
 
 
 # Create the model
-model = bilstm1.BiLSTM1(config, vocab_dict, embeddings)
+model = bilstm2.BiLSTM2(config, vocab_dict, embeddings)
 
 
 # Create the trainer

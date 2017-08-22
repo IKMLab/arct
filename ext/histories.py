@@ -1,43 +1,49 @@
 """For tracking and saving training histories."""
 import numpy as np
 from ext import models
+from hsdbi import mongo
+
+
+# Mongo DB Interface
+
+
+class DbInterface(mongo.MongoFacade):
+    """For access to MongoDB for saving and loading histories."""
+
+    def __init__(self, server='localhost', port=27017):
+        """Create a new DbInterface.
+        Args:
+          server: String, the MongoDB server address.
+          port: Integer, the port for the MongoDB server.
+        """
+        super(DbInterface, self).__init__(server, port)
+        self.history = mongo.MongoDbFacade(
+            self.connection,
+            db_name='history',
+            collections=['train'])
+
+
+DBI = DbInterface()  # for now this works for me.
 
 
 # UTILITY FUNCTIONS
 
 
-def load(dbi, name):
-    """Load a History object from a MongoDb connection.
-
-    Expects histories to be stored in a MongoDb in a db named history and a
-    collection named train. The MongoDb is accessed via hsdbi.mongo.MongoFacade.
-
+def adapt(json):
+    """Adapt json to a History object.
     Args:
-      dbi: hsdbi.mongo.MongoFacade object, for accessing the mongo database.
-      name: String, unique name of the training run.
-
+      json: Dictionary, history object loaded from MongoDB.
     Returns:
-      coldnet.histories.History object.
+      histories.History object.
     """
-    json = dbi.history.train.get(_id=name)
     config = models.Config(**json['config'])
     json.pop('config')
-    history = History(name, config)
-    history.name = json['_id']
+    name = json['_id']
     json.pop('_id')
+    history = History(name, config)
     for key, value in json:
         setattr(history, key, value)
     return history
-
-
-def save(dbi, history):
-    """Save a History object to Mongo.
-
-    Args:
-      dbi: hsdbi.mongo.MongoFacade object, for accessing the mongo database.
-      history: coldnet.histories.History object.
-    """
-    dbi.history.train.update(history.to_json())
 
 
 def last_change(series):
@@ -47,6 +53,7 @@ def last_change(series):
     Returns:
       Float.
     """
+    # TO DO: test this out properly and see why the results are currently weird.
     if len(series) == 0:
         raise ValueError('Series has no elements.')
     elif len(series) > 1:
@@ -55,7 +62,21 @@ def last_change(series):
         return series[0]
 
 
-# HISTORY CLASS
+def load(name):
+    """Load a history from the MongoDB.
+    Args:
+      name: String, unique identifier for the history.
+    Returns:
+      histories.History object.
+    """
+    if not DBI.history.train.exists(_id=name):
+        raise ValueError('No history with name "%s"' % name)
+    json = DBI.history.train.get(_id=name)
+    history = adapt(json)
+    return history
+
+
+# History Class
 
 
 class History:
@@ -63,12 +84,10 @@ class History:
 
     def __init__(self, name, config=None):
         """Create a new History.
-
         Args:
           name: String, unique identifying name of the training run.
           config: coldnet.models.Config. If creating a new History object,
             this cannot be None.
-
         Raises:
           ValueError: if name is not found and config is None.
         """
@@ -128,6 +147,13 @@ class History:
         avg_acc = np.average(self.tuning_accs)
         change_acc = last_change(self.tuning_accs)
         return avg_acc, change_acc
+
+    def save(self):
+        global DBI
+        if DBI.history.train.exists(_id=self.name):
+            DBI.history.train.update(self.to_json())
+        else:
+            DBI.history.train.add(self.to_json())
 
     def to_json(self):
         json = dict(self.__dict__)

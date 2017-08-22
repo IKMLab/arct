@@ -2,22 +2,19 @@
 import time
 import numpy as np
 import os
-from ext import histories
 
 
-# UTILITY FUNCTIONS
+# Training Class Utility Functions
 
 
 def model_path(ckpt_dir, model_name, is_best):
     """Get the file path to a model checkpoint.
-
     Args:
       ckpt_dir: String, base directory for data.
       model_name: String, the name of the training run (unique).
       is_best: Boolean, whether this checkpoint is the best result on the
         tuning set. If True, the checkpoint name has "best" appended to it.
         Otherwise it has "latest" appended to it.
-
     Returns:
       String.
     """
@@ -27,10 +24,8 @@ def model_path(ckpt_dir, model_name, is_best):
 
 def pretty_time(secs):
     """Get a readable string for a quantity of seconds.
-
     Args:
       secs: Integer, seconds.
-
     Returns:
       String, nicely formatted.
     """
@@ -46,13 +41,10 @@ def pretty_time(secs):
 
 def progress_percent(global_step, batches_per_epoch):
     """Get progress through the epoch in percentage terms.
-
     Will round to a multiple of 10.
-
     Args:
       global_step: Integer, the current global step (can cross epochs).
       batches_per_epoch: Integer.
-
     Returns:
       Integer, a percentage rounded to the nearest 10.
     """
@@ -74,10 +66,8 @@ def _print_epoch_start(epoch):
 
 def report_every(batches_per_epoch):
     """How many steps before reporting results.
-
     We will report 10 times per epoch, so this function calculates 10% of the
     number of batches per epoch.
-
     Args:
       batches_per_epoch: Integer, how many batches per epoch.
 
@@ -89,36 +79,13 @@ def report_every(batches_per_epoch):
 
 def steps_remaining(batches_per_epoch, step):
     """Determine how many steps remaining in an epoch.
-
     Args:
       batches_per_epoch: Integer.
       step: Integer, the global step, which can be a few epochs in.
-
     Returns:
       Integer.
     """
     return batches_per_epoch - (step % batches_per_epoch)
-
-
-# BASE DATA CLASS
-
-
-class Data:
-    """Base class for data.
-
-    This is more a declaration of the expected interface than a base class.
-
-    The data should be returned in batches, and indexable.
-    """
-
-    def __init__(self, data, *args):
-        self.data = data
-
-    def __len__(self):
-        return len(self.data)
-
-    def __getitem__(self, item):
-        return self.data[item]
 
 
 # BASE TRAINER CLASS
@@ -127,21 +94,18 @@ class Data:
 class TrainerBase:
     """Wraps a model and implements a train method."""
 
-    def __init__(self, model, history, train_data, tune_data, dbi):
+    def __init__(self, model, history, train_data, tune_data):
         """Create a new training wrapper.
-
         Args:
           model: any model to be trained, be it TensorFlow or PyTorch.
           history: histories.History object for storing training statistics.
           train_data: the data to be used for training.
-          tune_data: the data to be used for tuning; can be multiple data sets.
-          dbi: interface to mongo database for history saving.
+          tune_data: the data to be used for tuning; can be list of data sets.
         """
         self.model = model
         self.history = history
         self.train_data = train_data
         self.tune_data = tune_data
-        self.dbi = dbi
         self.batches_per_epoch = train_data.batches_per_epoch
         self.report_every = report_every(train_data.batches_per_epoch)
         # Load the latest checkpoint if necessary
@@ -159,7 +123,7 @@ class TrainerBase:
             self.history.end_epoch(time_taken)
         self._report_epoch(avg_time, avg_loss, change_loss)
         self._checkpoint(is_best)
-        self._save_history()
+        self.history.save()
 
     def _end_step(self, loss, acc):
         self.step_end = time.time()
@@ -199,12 +163,6 @@ class TrainerBase:
                                  * steps_remaining(self.batches_per_epoch,
                                                    global_step))))
 
-    def _save_history(self):
-        if self.dbi.history.train.exists(_id=self.history.name):
-            self.dbi.history.train.update(self.history.to_json())
-        else:
-            self.dbi.history.train.add(self.history.to_json())
-
     def _start_epoch(self):
         _print_epoch_start(self.history.global_epoch)
         self.model.train()
@@ -215,9 +173,7 @@ class TrainerBase:
 
     def step(self, *args):
         """Take a training step.
-
         Calculate loss and accuracy and do optimization.
-
         Returns:
           Float, Float: loss, accuracy for the batch.
         """

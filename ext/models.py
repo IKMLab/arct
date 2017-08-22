@@ -57,7 +57,8 @@ class Config:
         return [k for k in self.__dict__.keys() if k.startswith('p_keep_')]
 
     def keys(self):
-        return self.__dict__.keys()
+        return [key for key in self.__dict__.keys()
+                if key not in ['default', 'kwargs']]
 
     def to_json(self):
         return dict(self.__dict__)

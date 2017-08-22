@@ -2,10 +2,10 @@ import tensorflow as tf
 from ext import tensor_flow
 
 
-class BiLSTM1(tensor_flow.TensorFlowModel):
+class BiLSTM2(tensor_flow.TensorFlowModel):
     """BiLSTM encode-compose model with three hidden layers classifier."""
     def __init__(self, config, vocab_dict, embed_mat):
-        super(BiLSTM1, self).__init__(config, vocab_dict, embed_mat)
+        super(BiLSTM2, self).__init__(config, vocab_dict, embed_mat)
 
         # Inputs: size [batch_size, seq_length], both can vary, so None here.
         self.r = tf.placeholder(tf.int32, [None, None], 'reasons')
@@ -26,14 +26,13 @@ class BiLSTM1(tensor_flow.TensorFlowModel):
             self.W_comp, self.b_comp = tensor_flow.layer_params(
                 8 * self.hidden_size, self.hidden_size, 'relu')
         with tf.name_scope('evaluate'):
+            mlp_size = int(self.hidden_size / 2)
             self.W_eval1, self.b_eval1 = tensor_flow.layer_params(
-                self.hidden_size / 3, 1, 'relu')
+                self.hidden_size, mlp_size, 'relu')
             self.W_eval2, self.b_eval2 = tensor_flow.layer_params(
-                self.hidden_size / 3, 1, 'relu')
-            self.W_eval3, self.b_eval3 = tensor_flow.layer_params(
-                self.hidden_size / 3, 1, 'relu')
+                mlp_size, mlp_size, 'relu')
             self.W_eval, self.b_eval = tensor_flow.layer_params(
-                self.hidden_size, 1, 'sigmoid')
+                mlp_size, 1, 'sigmoid')
 
         # Initialize computation graph.
         self._init_backend()
@@ -85,15 +84,13 @@ class BiLSTM1(tensor_flow.TensorFlowModel):
         h1 = tf.nn.dropout(h1, self.p_keep['fc'])
         h2 = tf.nn.relu(tf.matmul(h1, self.W_eval2) + self.b_eval2)
         h2 = tf.nn.dropout(h2, self.p_keep['fc'])
-        h3 = tf.nn.relu(tf.matmul(h2, self.W_eval3) + self.b_eval3)
-        h3 = tf.nn.dropout(h3, self.p_keep['fc'])
-        logits = tf.sigmoid(tf.matmul(h3, self.W_eval) + self.b_eval)
+        logits = tf.sigmoid(tf.matmul(h2, self.W_eval) + self.b_eval)
 
         return logits
 
     @tensor_flow.define_scope
     def loss(self):
-        return tf.losses.log_loss(self.labels, self.logits)
+        return tf.losses.mean_squared_error(self.labels, self.logits)
 
     @tensor_flow.define_scope
     def predictions(self):
