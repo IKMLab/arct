@@ -1,4 +1,4 @@
 from ext import mongoi
 
 
-dbi = mongoi.Facade()
+dbi = mongoi.DbInterface()
