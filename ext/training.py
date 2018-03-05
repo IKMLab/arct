@@ -1,33 +1,21 @@
-"""Base code for training."""
+"""Base classes for training."""
 import time
 import numpy as np
+import torch
 import os
 
 
-# Training Class Utility Functions
-
-
-def model_path(ckpt_dir, model_name, is_best):
-    """Get the file path to a model checkpoint.
-    Args:
-      ckpt_dir: String, base directory for data.
-      model_name: String, the name of the training run (unique).
-      is_best: Boolean, whether this checkpoint is the best result on the
-        tuning set. If True, the checkpoint name has "best" appended to it.
-        Otherwise it has "latest" appended to it.
-    Returns:
-      String.
-    """
-    return os.path.join(
-        ckpt_dir, '%s_%s' % (model_name, 'best' if is_best else 'latest'))
+DIV = '--------\t  ----------------\t------------------\t--------\t--------'
 
 
 def pretty_time(secs):
-    """Get a readable string for a quantity of seconds.
+    """Get a readable string for a quantity of time.
+
     Args:
       secs: Integer, seconds.
+
     Returns:
-      String, nicely formatted.
+      String.
     """
     if secs < 60.0:
         return '%4.2f secs' % secs
@@ -39,180 +27,320 @@ def pretty_time(secs):
         return '%3.2f days' % (secs / 60 / 60 / 24)
 
 
-def progress_percent(global_step, batches_per_epoch):
-    """Get progress through the epoch in percentage terms.
-    Will round to a multiple of 10.
-    Args:
-      global_step: Integer, the current global step (can cross epochs).
-      batches_per_epoch: Integer.
-    Returns:
-      Integer, a percentage rounded to the nearest 10.
-    """
-    percent = (global_step % batches_per_epoch) / batches_per_epoch * 100
-    rounded = int(np.ceil(percent / 10.0) * 10)
-    return rounded
+class TrainingHistory:
+    """Wraps training history details, facilitating resumption of training."""
+
+    def __init__(self, name):
+        self._id = name
+        self.name = name
+        self.global_step = 0
+        self.global_epoch = 0
+        self.epoch_losses = []
+        self.epoch_accs = []
+        self.tuning_accs = []
+        self.t_avg_step = 0.
+        self.t_avg_epoch = 0.
+        self.t_total = 0.
+        self.lr = 0.  # keep track of principal learning rate
 
 
-def _print_dividing_lines():
-    # For visuals, when reporting results to terminal.
-    print('------\t\t------\t\t------\t\t------\t\t------')
+class HistoryManager:
+    """For loading and saving histories."""
 
+    def __init__(self, repo):
+        """Create a new HistoryManager.
 
-def _print_epoch_start(epoch):
-    _print_dividing_lines()
-    print('Epoch %s\t\tloss\t\taccuracy\tavg(t)\t\tremaining' % epoch)
-    _print_dividing_lines()
-
-
-def report_every(batches_per_epoch):
-    """How many steps before reporting results.
-    We will report 10 times per epoch, so this function calculates 10% of the
-    number of batches per epoch.
-    Args:
-      batches_per_epoch: Integer, how many batches per epoch.
-
-    Returns:
-      Integer.
-    """
-    return int(np.floor(batches_per_epoch / 10))
-
-
-def steps_remaining(batches_per_epoch, step):
-    """Determine how many steps remaining in an epoch.
-    Args:
-      batches_per_epoch: Integer.
-      step: Integer, the global step, which can be a few epochs in.
-    Returns:
-      Integer.
-    """
-    return batches_per_epoch - (step % batches_per_epoch)
-
-
-# BASE TRAINER CLASS
-
-
-class TrainerBase:
-    """Wraps a model and implements a train method."""
-
-    def __init__(self, model, history, train_data, tune_data):
-        """Create a new training wrapper.
         Args:
-          model: any model to be trained, be it TensorFlow or PyTorch.
-          history: histories.History object for storing training statistics.
-          train_data: the data to be used for training.
-          tune_data: the data to be used for tuning; can be list of data sets.
+          repo: hsdbi.mongo.MongoRepository, for access to the collection that
+            stores the records.
         """
+        self.repo = repo
+
+    def delete(self, name):
+        self.repo.delete(name=name)
+
+    def exists(self, name):
+        return self.repo.exists(name=name)
+
+    def load(self, name):
+        json = self.repo.get(name=name)
+        history = TrainingHistory(json['name'])
+        for key, value in json.items():
+            setattr(history, key, json[key])
+        return history
+
+    def save(self, history):
+        if self.exists(history.name):
+            self.repo.update(history.__dict__)
+        else:
+            self.repo.add(**history.__dict__)
+
+
+class Trainer:
+    """Base Trainer defining interface and implementing common functionality."""
+
+    def __init__(self, model, config, train_loader, tune_loader, annealing,
+                 stopping, saver, logger, history, history_manager, is_grid):
+        """Create a new Trainer.
+
+        We expect config to have a 'max_epochs'.
+
+        Args:
+          model: torch.nn.Module, the model to train.
+          config: Dictionary of configuration settings.
+          train_loader: torch.utils.data.dataloader.DataLoader.
+          tune_loader: torch.utils.data.dataloader.DataLoader. Can be None, in
+            which case the tuning part of the algorithm will not run.
+          annealing: LearningRateAlgorithm.
+          stopping: EarlyStoppingAlgorithm.
+          saver: Saver, for checkpointing.
+          logger: Logger, for logging.
+          history: TrainingHistory.
+          history_manager: HistoryManager, for saving the history.
+          is_grid: Bool, indicates a gridsearch case - won't save params.
+
+        Raises:
+          ValueError: if config missing 'max_epochs'.
+        """
+        if 'max_epochs' not in config.keys():
+            raise ValueError("Missing 'max_epochs' from config")
+
+        self.max_epochs = config['max_epochs']
         self.model = model
+        self.config = config
+        self.train_loader = train_loader
+        self.tune_loader = tune_loader
+        self.annealing = annealing
+        self.stopping = stopping
+        self.saver = saver
+        self.logger = logger
         self.history = history
-        self.train_data = train_data
-        self.tune_data = tune_data
-        self.batches_per_epoch = train_data.batches_per_epoch
-        self.report_every = report_every(train_data.batches_per_epoch)
-        # Load the latest checkpoint if necessary
-        if self.history.global_step > 1:
-            print('Loading last checkpoint...')
-            self._load_last()
+        history.lr = config['lr']
+        self.history_manager = history_manager
+        self.batches_per_epoch = len(train_loader)
+        self.is_grid = is_grid
 
-    def _checkpoint(self, is_best):
-        raise NotImplementedError('Deriving classes must implement.')
+    def epoch_ending(self, tuning_acc):
+        self.logger.log(DIV)
+        self.history.t_avg_step = (self.history.t_avg_step
+                                   + np.average(self.step_times)) / 2
+        self.history.t_avg_epoch = (self.history.t_avg_epoch
+                                    + np.average(self.step_times)
+                                    * len(self.train_loader)) / 2
+        self.history.t_total += np.sum(self.step_times)
+        self.history.epoch_losses.append(np.average(self.step_losses))
+        self.history.epoch_accs.append(np.average(self.step_accs))
+        self.logger.log('\t\t\t\t\t\t\t\t%s'
+                        % pretty_time(self.history.t_avg_epoch))
+        self.logger.log('Tuning acc: %6.4f' % tuning_acc)
+        if self.annealing.update_granularity == 'epoch':
+            if self.annealing.update_required(self.history):
+                self.update_learning_rate()
+        if not self.is_grid:
+            is_best = tuning_acc == np.max(self.history.tuning_accs)
+            # always save latest
+            self.saver.save(self.model, is_best=False)
+            if is_best:
+                self.saver.save(self.model, is_best=True)
+            self.history_manager.save(self.history)
 
-    def _end_epoch(self):
-        self._epoch_end = time.time()
-        time_taken = self._epoch_end - self._epoch_start
-        avg_time, avg_loss, change_loss, avg_acc, change_acc, is_best = \
-            self.history.end_epoch(time_taken)
-        self._report_epoch(avg_time, avg_loss, change_loss)
-        self._checkpoint(is_best)
-        self.history.save()
-
-    def _end_step(self, loss, acc):
-        self.step_end = time.time()
-        time_taken = self.step_end - self.step_start
-        global_step, avg_time, avg_loss, avg_acc = \
-            self.history.end_step(time_taken, loss, acc)
-        self._report_step(global_step, avg_loss, avg_acc, avg_time)
-
-    def _load_last(self):
-        raise NotImplementedError('Deriving classes must implement.')
-
-    def predict(self, batch):
-        """Predict labels for a batch and return accuracy."""
-        raise NotImplementedError('Deriving classes must implement.')
-
-    def _report_epoch(self, avg_time, change_loss, change_acc):
-        _print_dividing_lines()
-        print('\t\t%s%10.5f\t%s%6.4f%%\t%s\t'
-              % ('+' if change_loss > 0 else '',
-                 change_loss,
-                 '+' if change_acc > 0 else '',
-                 change_acc,
-                 pretty_time(np.average(avg_time))))
-
-    def _report_step(self, global_step, avg_loss, avg_acc, avg_time):
-        if global_step % self.report_every == 0:
-            print('%s%%:\t\t'
-                  '%8.5f\t'
-                  '%6.4f%%\t'
-                  '%s\t'
-                  '%s'
-                  % (progress_percent(global_step, self.batches_per_epoch),
-                     avg_loss,
-                     avg_acc * 100,
-                     pretty_time(avg_time),
-                     pretty_time(avg_time
-                                 * steps_remaining(self.batches_per_epoch,
-                                                   global_step))))
-
-    def _start_epoch(self):
-        _print_epoch_start(self.history.global_epoch)
+    def epoch_starting(self):
+        self.step_losses = []
+        self.step_accs = []
+        self.step_times = []
+        self.history.global_epoch += 1
+        self.local_step = 1
         self.model.train()
-        self._epoch_start = time.time()
+        self.logger.log(DIV)
+        self.logger.log('Epoch %s \t       loss       \t     accuracy     '
+                        '\tt(avg.)\t\tremaining' % self.history.global_epoch)
+        self.logger.log(
+            '        \t  last      avg.  \t  last      avg.  \t       \t')
+        self.logger.log(DIV)
 
-    def _start_step(self):
-        self.step_start = time.time()
+    def step_ending(self, loss, acc):
+        self.step_end_time = time.time()
+        time_taken = self.step_end_time - self.step_start_time
+        self.step_times.append(time_taken)
+        self.step_losses.append(loss)
+        self.step_accs.append(acc)
+        if self.history.global_epoch > 1:        
+            prev_avg_time = self.history.t_avg_step
+            prev_avg_loss = np.average(self.history.epoch_losses)
+            prev_avg_acc = np.average(self.history.epoch_accs)
+            avg_time = (prev_avg_time + np.average(self.step_times)) / 2
+            avg_loss = (prev_avg_loss + np.average(self.step_losses)) / 2
+            avg_acc = (prev_avg_acc + np.average(self.step_accs)) / 2
+        else:
+            avg_time = np.average(self.step_times)
+            avg_loss = np.average(self.step_losses)
+            avg_acc = np.average(self.step_accs)
+        report, percent, steps_remaining = self.step_status()
+        if report:
+            self.logger.log('%2.0f%%:\t\t%8.4f  %8.4f\t%6.4f%%  %6.4f%%\t%s\t%s'
+                            % (percent,
+                               loss,
+                               avg_loss,
+                               acc * 100,
+                               avg_acc * 100,
+                               pretty_time(avg_time),
+                               pretty_time(avg_time * steps_remaining)))
+        self.local_step += 1
+        if self.annealing.update_granularity == 'step':
+            if self.annealing.update_required(self.history):
+                self.update_learning_rate()
 
-    def step(self, *args):
+    def step_starting(self):
+        self.history.global_step += 1
+        self.step_start_time = time.time()
+
+    def step_status(self):
+        report_interval = np.ceil(self.batches_per_epoch / 10.)
+        percent = self.local_step / report_interval * 10
+        steps_remaining = self.batches_per_epoch - self.local_step
+        report = self.local_step % report_interval == 0 \
+            and self.local_step < report_interval * 10
+        return report, percent, steps_remaining
+
+    def step(self, batch):
         """Take a training step.
-        Calculate loss and accuracy and do optimization.
-        Returns:
-          Float, Float: loss, accuracy for the batch.
-        """
-        raise NotImplementedError('Deriving classes must implement.')
 
-    def _stopping_condition_met(self):
-        # Override this method to set a custom stopping condition.
+        Args:
+          batch: an object representing an appropriate batch for the model.
+
+        Returns:
+          loss: Float.
+          acc: Float.
+        """
+        self.model.zero_grad()
+        _, loss, acc = self.model.forward(batch)
+        self.model.optimize(loss)
+        loss = float(loss.cpu().data.numpy()[0])
+        acc = float(acc.cpu().data.numpy()[0])
+        return loss, acc
+
+    def stop(self):
+        if self.history.global_epoch >= self.max_epochs:
+            self.logger.log('Global max epoch reached (%s).' % self.max_epochs)
+            return True
+        early_stop, info = self.stopping(self.history)
+        if early_stop:
+            self.logger.log('Stopping condition met:')
+            self.logger.log(info)
+            return True
         return False
 
     def train(self):
-        """Run the training algorithm."""
-        while not self._stopping_condition_met():
-            self._start_epoch()
-            for _ in range(self.train_data.batches_per_epoch):
-                self._start_step()
-                batch = self.train_data.next_batch()
+        """Executes training algorithm.
+
+        Returns:
+          Float: best accuracy on tuning set.
+        """
+        if torch.cuda.is_available():
+            self.model.cuda()
+        while not self.stop():
+            self.epoch_starting()
+            for _, batch in enumerate(self.train_loader):
+                self.step_starting()
                 loss, acc = self.step(batch)
-                self._end_step(loss, acc)
-            self._tuning()
-            self._end_epoch()
+                self.step_ending(loss, acc)
+            tuning_acc = self.tuning()
+            self.epoch_ending(tuning_acc)
+        return np.max(self.history.tuning_accs)
 
-    def _tune(self, tune_set):
-        cum_acc = 0.
-        for _ in range(tune_set.batches_per_epoch):
-            batch = tune_set.next_batch()
-            acc = self.predict(batch)
-            cum_acc += acc
-        tuning_acc = cum_acc / tune_set.batches_per_epoch
-        avg_acc, change_acc = self.history.end_tuning(tuning_acc)
-        print('Average tuning accuracy: %5.3f%% (%s%5.3f%%)' %
-              (avg_acc * 100,
-               '+' if change_acc > 0 else '',
-               change_acc * 100))
+    def tuning(self):
+        if self.tune_loader:
+            self.model.eval()
+            cum_acc = 0.
+            for _, batch in enumerate(self.tune_loader):
+                _, __, acc = self.model.forward(batch)
+                cum_acc += acc.cpu().data.numpy()[0]
+            acc = cum_acc / len(self.tune_loader)
+            self.history.tuning_accs.append(acc)
+            return acc
 
-    def _tuning(self):
-        self.model.eval()
-        if isinstance(self.tune_data, list):
-            for tune_set in self.tune_data:
-                self._tune(tune_set)
+    def update_learning_rate(self):
+        # principal learning rate
+        current = self.history.lr
+        new = self.annealing.new_learning_rate(current, self.history)
+        self.history.lr = new
+        self.logger.log('LR Update :: %s \t\t%1.2e => %1.2e'
+                        % ('principal', current, new))
+        # individual params
+        for param_group in self.model.optimizer.param_groups:
+            current = param_group['lr']
+            new = self.annealing.new_learning_rate(current, self.history)
+            param_group['lr'] = new
+            self.logger.log('LR Update :: %s %s\t%1.2e => %1.2e'
+                            % (param_group['name'],
+                               '\t' if len(param_group['name']) < 10 else '',
+                               current,
+                               new))
+
+
+class Saver:
+    """For loading and saving state dicts.
+
+    The load and save methods accept a model argument. This model is expected to
+    be a torch.nn.Module that additionally defines "name" (String) and
+    "optimizer" (PyTorch optimizer module) attributes.
+
+    The checkpoint locations are given by the ckpt_dir argument given to the
+    constructor, which defines the base directory, and then given the model.name
+    attribute saves the files to:
+      ckpt_dir/model.name_{model, optim}_{best, latest}
+    """
+
+    def __init__(self, ckpt_dir):
+        self.ckpt_dir = ckpt_dir
+
+    def ckpt_path(self, name, module, is_best):
+        """Get the file path to a checkpoint.
+
+        Args:
+          name: String, the model name.
+          module: String in {model, optim}.
+          is_best: Bool.
+
+        Returns:
+          String.
+        """
+        return os.path.join(
+            self.ckpt_dir,
+            '%s_%s_%s' % (name, module, 'best' if is_best else 'latest'))
+
+    def load(self, model, is_best=False, load_to_cpu=False):
+        """Load model and optimizer state dict.
+
+        Args:
+          model: a PyTorch model that defines an optimizer attribute.
+          is_best: Bool, indicates whether the checkpoint is the best tuning
+            accuracy. If not it is "latest".
+          load_to_cpu: Bool, for loading GPU trained parameters on cpu. Default
+            is False.
+        """
+        model_path = self.ckpt_path(model.name, 'model', is_best)
+        optim_path = self.ckpt_path(model.name, 'optim', is_best)
+        if not torch.cuda.is_available() or load_to_cpu:
+            model_state_dict = torch.load(
+                model_path, map_location=lambda storage, loc: storage)
+            optim_state_dict = torch.load(
+                optim_path, map_location=lambda storage, loc: storage)
         else:
-            self._tune(self.tune_data)
-        self.model.train()
+            model_state_dict = torch.load(model_path)
+            optim_state_dict = torch.load(optim_path)
+        model.load_state_dict(model_state_dict)
+        model.optimizer.load_state_dict(optim_state_dict)
+
+    def save(self, model, is_best):
+        """Save a model and optimizer state dict.
+
+        Args:
+          model: a PyTorch model that defines an optimizer attribute.
+          is_best: Bool, indicates whether the checkpoint is the best tuning
+            accuracy. If not it is "latest".
+        """
+        model_path = self.ckpt_path(model.name, 'model', is_best)
+        optim_path = self.ckpt_path(model.name, 'optim', is_best)
+        torch.save(model.state_dict(), model_path)
+        torch.save(model.optimizer.state_dict(), optim_path)

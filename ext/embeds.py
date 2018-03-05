@@ -2,7 +2,7 @@
 import numpy as np
 
 
-def create_embeddings(vocab_dict, emb_size, embedding_file_path):
+def create_glove_embeddings(vocab_dict, emb_size, embedding_file_path):
     """Create embeddings for the vocabulary.
 
     Creates an embedding matrix given the pre-trained word vectors, and any OOV
@@ -31,19 +31,9 @@ def create_embeddings(vocab_dict, emb_size, embedding_file_path):
                 s = [s[0]] + s[-300:]
                 assert len(s) == 301
             if s[0] in vocab_dict.keys():
-                if s[0] in oov.keys():  # seems we get some duplicate vectors.
+                if s[0] in oov.keys():  # seems we get some duplicate vectors
                     oov.pop(s[0])
-                try:
-                    embeddings[vocab_dict[s[0]], :] = np.asarray(s[1:])
-                except Exception as e:
-                    print('i: %s' % i)
-                    print('s[0]: %s' % s[0])
-                    print('vocab_[s[0]]: %s' % vocab_dict[s[0]])
-                    print('len(vocab): %s' % len(vocab_dict))
-                    print('vocab_min_val: %s' % min(vocab_dict.values()))
-                    print('vocab_max_val: %s' % max(vocab_dict.values()))
-                    raise e
+                embeddings[vocab_dict[s[0]], :] = np.asarray(s[1:])
     print('Success.')
     print('OOV count = %s' % len(oov))
-    print(oov)
     return embeddings, oov

@@ -1,10 +1,12 @@
-"""Global variables."""
+"""Global Variables."""
 import os
 
 
 APP_DIR = os.getcwd()
-CKPT_DIR = os.path.join(APP_DIR, 'ckpts/')
+DATA_DIR = os.path.join(APP_DIR, 'data')
 HOME_DIR = os.environ['HOME']
-DATA_DIR = os.path.join(HOME_DIR, 'dev/data/')
-GLOVE_DIR = os.path.join(HOME_DIR, 'dev/data/glove/glove.840B.300d.txt')
-PKL_DIR = os.path.join(APP_DIR, 'pickles/')
+ARCT_DIR = os.path.join(HOME_DIR, 'dev/data/argmin/arct')
+GLOVE_PATH = os.path.join(HOME_DIR, 'dev/data/glove/glove.840B.300d.txt')
+FASTTEXT_PATH = os.path.join(HOME_DIR, 'dev/data/fasttext/crawl-300d-2M.vec')
+LOG_DIR = os.path.join(DATA_DIR, 'logs')
+CKPT_DIR = os.path.join(DATA_DIR, 'ckpts')

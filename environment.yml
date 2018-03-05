@@ -1,0 +1,7 @@
+name: nli
+dependencies:
+- hsdbi=0.1a18
+- nltk=3.2.5
+- numpy=1.14.0
+- torch=0.3.0.post4
+- spacy=2.0.5

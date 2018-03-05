@@ -1,13 +1,13 @@
-"""MongoDB interface."""
+"""Mongo Interface."""
 from hsdbi import mongo
 
 
-class DbInterface(mongo.MongoFacade):
-    """For access to MongoDB for saving and loading histories."""
+class MongoDbInterface(mongo.MongoDbFacade):
+    """Interface for access to MongoDB."""
 
-    def __init__(self, server='localhost', port=27017):
-        super(DbInterface, self).__init__(server, port)
-        self.history = mongo.MongoDbFacade(
-            self.connection,
-            db_name='history',
-            collections=['train'])
+    def __init__(self, db_name):
+        super(MongoDbInterface, self).__init__(db_name=db_name)
+        self.experiments = mongo.MongoRepository(self.db, 'experiments')
+        self.grid = mongo.MongoRepository(self.db, 'grid')
+        self.histories = mongo.MongoRepository(self.db, 'histories')
+
