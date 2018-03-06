@@ -100,7 +100,6 @@ ENV/
 graphs/
 logs/
 checkpoints/
-data/
 histories/
 pickles/
 main.py
