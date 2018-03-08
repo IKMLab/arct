@@ -1,10 +1,8 @@
 """Script for all preprocessing and preparation.
 
 Before running this script, be sure to set:
-* glovar.DATA_DIR: decide where to store all generated data
 * glovar.ARCT_DIR: the folder in which the data files are kept
 * glovar.GLOVE_PATH: path to 300d glove embeddings
-* glovar.FASTTEXT_PATH: path to 300d fasttest embeddings
 """
 import arct
 import os
@@ -48,17 +46,6 @@ if not arct.PKL.exists('glove', ['arct']):
         vocab.ix, 300, glovar.GLOVE_PATH)
     arct.PKL.save(embeddings, 'glove', ['arct'])
     arct.PKL.save(oov, 'glove_oov', ['arct'])
-else:
-    print('Already exists.')
-
-
-# 3. Create FastText embeddings
-print('Creating FastText embeddings...')
-if not arct.PKL.exists('fasttext', ['arct']):
-    embeddings, oov = embeds.create_glove_embeddings(
-        vocab.ix, 300, glovar.FASTTEXT_PATH)
-    arct.PKL.save(embeddings, 'fasttext', ['arct'])
-    arct.PKL.save(oov, 'fasttext_oov', ['arct'])
 else:
     print('Already exists.')
 
