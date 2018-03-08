@@ -7,5 +7,5 @@ class MongoDbInterface(mongoi.MongoDbInterface):
     """Interface for access to MongoDB."""
 
     def __init__(self):
-        super(MongoDbInterface, self).__init__(db_name='arct')
+        super(MongoDbInterface, self).__init__(db_name='arctr')
         self.arct = mongo.MongoRepository(db=self.db, collection_name='arct')

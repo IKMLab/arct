@@ -22,6 +22,7 @@ new_seeds = getattr(args, 'new_seeds')
 
 
 config = configuration.Config(configs.get_config(name))
+config['n_runs'] = 20
 processor = processing.Processor(arct.TRAIN_FACTORY, new_seeds)
 experiment = processor.run_exp(config)
 
