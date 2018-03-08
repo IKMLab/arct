@@ -12,8 +12,6 @@ This repository holds a frozen version of the code used for our submission in Se
 
 ## Reproducing Our Results
 
-[FUNTIONALITY UNDER CONSTRUCTION, SHOULD BE DONE TODAY]
-
 To reproduce any of our experiments, simply call the script `reproduce.py {name}`
 where `name` corresponds to the `experiment_name` column in the table below.
 This will perform training 20 times based on the config settings we used (stored in `configs.py`,
