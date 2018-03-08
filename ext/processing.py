@@ -12,7 +12,8 @@ class Processor:
         self.factory = factory
         self.new_seeds = new_seeds
         test_data = arct.DATA_FACTORY.test(None)
-        collator = arct.TRAIN_FACTORY.collator({'collator': 'rnn_sent'})
+        collator = arct.TRAIN_FACTORY.collator({'collator': 'rnn_sent',
+                                                'tokenizer': 'spacy'})
         self.test_loader = arct.TRAIN_FACTORY.data_loader(
             {'batch_size': 16}, test_data, collator)
 
