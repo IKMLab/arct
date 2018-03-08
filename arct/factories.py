@@ -87,7 +87,11 @@ class ARCTDataFactory(ext_factories.TextDataFactory):
         return pickling.load(glovar.DATA_DIR, 'vocab', ['arct'])
 
     def wordset(self, tokenizer):
-        data = self.train(None) + self.tune(None) + self.data('test-only-data')
+        config = {'target': 'train-full',
+                  'train_subsample': 0,
+                  'tune_subsample': 0}
+        data = self.train(config) + self.tune(config) \
+               + self.data('test-only-data')
         text_per_sample = [' '.join([d[c] for c in TEXT_COLS]) for d in data]
         all_text = ' '.join(text_per_sample)
         return set(tokenizer(all_text))

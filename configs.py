@@ -1,9 +1,21 @@
 """Record of config settings for reported experiments and retrievel."""
+import pandas as pd
+import glovar
+import os
+
+
+def get_seed(experiment_name, run_num):
+    df = pd.read_csv(os.path.join(glovar.DATA_DIR, 'all_results.csv'))
+    exp = df[df['experiment_name'] == experiment_name]
+    exp = exp[exp['run_no'] == run_num]
+    seed = int(exp['seed'].values[0])
+    return seed
 
 
 def get_config(experiment_name):
     if experiment_name == 't2048fwcomp':
         return {
+            'train_subsample': 0,
             'tune_target': 'dev-full',
             'bidirectional': True,
             'projection_size': 200,
@@ -48,50 +60,52 @@ def get_config(experiment_name):
 
     elif experiment_name == 'r2048fwcomp':
         return {
-        'tune_target': 'dev-full',
-        'bidirectional': True,
-        'projection_size': 200,
-        'p_drop': 0.1,
-        'collator': 'rnn_sent',
-        'lr_decay_rate': 0.2,
-        'tune_embeds': False,
-        'name': 'r2048fwcomp',
-        'batch_size': 16,
-        'transfer_name': 'e2048',
-        'sos_eos': True,
-        'encoder_size': 2048,
-        'stop_lr_lim': 1e-05,
-        'emb_lr_factor': 0.01,
-        'encoder': 'lstm',
-        'encoder_layers': 1,
-        'grid_name': '',
-        'model': 'comp',
-        'target': 'train-full',
-        'tune_encoder': True,
-        'l2': 0.0,
-        'max_epochs': 200,
-        'from_grid_trans': False,
-        'stop_t_worse': 1,
-        'transfer': False,
-        'lr_decay_every': 0.0,
-        'seed': -1,
-        'tokenizer': 'spacy',
-        'hidden_size': 512,
-        'embed_type': 'glove',
-        'lr': 0.002,
-        'lr_decay_grace': 0,
-        'embed_size': 300,
-        'n_runs': 20,
-        'p_drop_rnn': 0.0,
-        'stopping': 'min_lr',
-        'annealing': 'tune_acc_decay',
-        'enc_lr_factor': 1.0,
-        'override': True,
-        'from_grid': False,
-    }
+            'train_subsample': 0,
+            'tune_target': 'dev-full',
+            'bidirectional': True,
+            'projection_size': 200,
+            'p_drop': 0.1,
+            'collator': 'rnn_sent',
+            'lr_decay_rate': 0.2,
+            'tune_embeds': False,
+            'name': 'r2048fwcomp',
+            'batch_size': 16,
+            'transfer_name': 'e2048',
+            'sos_eos': True,
+            'encoder_size': 2048,
+            'stop_lr_lim': 1e-05,
+            'emb_lr_factor': 0.01,
+            'encoder': 'lstm',
+            'encoder_layers': 1,
+            'grid_name': '',
+            'model': 'comp',
+            'target': 'train-full',
+            'tune_encoder': True,
+            'l2': 0.0,
+            'max_epochs': 200,
+            'from_grid_trans': False,
+            'stop_t_worse': 1,
+            'transfer': False,
+            'lr_decay_every': 0.0,
+            'seed': -1,
+            'tokenizer': 'spacy',
+            'hidden_size': 512,
+            'embed_type': 'glove',
+            'lr': 0.002,
+            'lr_decay_grace': 0,
+            'embed_size': 300,
+            'n_runs': 20,
+            'p_drop_rnn': 0.0,
+            'stopping': 'min_lr',
+            'annealing': 'tune_acc_decay',
+            'enc_lr_factor': 1.0,
+            'override': True,
+            'from_grid': False,
+        }
 
     elif experiment_name == 't1024fwcomp':
         return {
+            'train_subsample': 0,
             'tune_target': 'dev-full',
             'bidirectional': True,
             'projection_size': 200,
@@ -136,6 +150,7 @@ def get_config(experiment_name):
 
     elif experiment_name == 'r1024fwcomp':
         return {
+            'train_subsample': 0,
             'tune_target': 'dev-full',
             'bidirectional': True,
             'projection_size': 200,
@@ -180,6 +195,7 @@ def get_config(experiment_name):
 
     elif experiment_name == 't512fwcomp':
         return {
+            'train_subsample': 0,
             'tune_target': 'dev-full',
             'bidirectional': True,
             'projection_size': 200,
@@ -224,6 +240,7 @@ def get_config(experiment_name):
 
     elif experiment_name == 't512fwcompN':
         return {
+            'train_subsample': 0,
             'tune_target': 'dev-full',
             'bidirectional': True,
             'projection_size': 200,
@@ -268,6 +285,7 @@ def get_config(experiment_name):
 
     elif experiment_name == 'r512fwcomp':
         return {
+            'train_subsample': 0,
             'tune_target': 'dev-full',
             'bidirectional': True,
             'projection_size': 200,
@@ -312,6 +330,7 @@ def get_config(experiment_name):
 
     elif experiment_name == 't300fwcomp':
         return {
+            'train_subsample': 0,
             'tune_target': 'dev-full',
             'bidirectional': True,
             'projection_size': 200,
@@ -356,6 +375,7 @@ def get_config(experiment_name):
 
     elif experiment_name == 'r300fwcomp':
         return {
+            'train_subsample': 0,
             'tune_target': 'dev-full',
             'bidirectional': True,
             'projection_size': 200,
@@ -400,6 +420,7 @@ def get_config(experiment_name):
 
     elif experiment_name == 't100fwcomp':
         return {
+            'train_subsample': 0,
             'tune_target': 'dev-full',
             'bidirectional': True,
             'projection_size': 200,
@@ -444,6 +465,7 @@ def get_config(experiment_name):
 
     elif experiment_name == 'r100fwcomp':
         return {
+            'train_subsample': 0,
             'tune_target': 'dev-full',
             'bidirectional': True,
             'projection_size': 200,
@@ -488,6 +510,7 @@ def get_config(experiment_name):
 
     elif experiment_name == 't512fwcompc':
         return {
+            'train_subsample': 0,
             'tune_target': 'dev-full',
             'bidirectional': True,
             'projection_size': 200,
@@ -532,6 +555,7 @@ def get_config(experiment_name):
 
     elif experiment_name == 't512fwcompcHalf':
         return {
+            'train_subsample': 0,
             'tune_target': 'dev-full',
             'bidirectional': True,
             'projection_size': 200,
@@ -576,6 +600,7 @@ def get_config(experiment_name):
 
     elif experiment_name == 't512fwcompcN':
         return {
+            'train_subsample': 0,
             'tune_target': 'dev-full',
             'bidirectional': True,
             'projection_size': 200,
@@ -620,6 +645,7 @@ def get_config(experiment_name):
 
     elif experiment_name == 't640fwcomprw2':
         return {
+            'train_subsample': 0,
             'tune_target': 'dev-full',
             'bidirectional': True,
             'projection_size': 200,
@@ -664,6 +690,7 @@ def get_config(experiment_name):
 
     elif experiment_name == 't2048fwlin':
         return {
+            'train_subsample': 0,
             'tune_target': 'dev-full',
             'bidirectional': True,
             'projection_size': 200,
@@ -708,6 +735,7 @@ def get_config(experiment_name):
 
     elif experiment_name == 'r2048fwlin':
         return {
+            'train_subsample': 0,
             'tune_target': 'dev-full',
             'bidirectional': True,
             'projection_size': 200,
@@ -752,6 +780,7 @@ def get_config(experiment_name):
 
     elif experiment_name == 't1024fwlin':
         return {
+            'train_subsample': 0,
             'tune_target': 'dev-full',
             'bidirectional': True,
             'projection_size': 200,
@@ -796,6 +825,7 @@ def get_config(experiment_name):
 
     elif experiment_name == 'r1024fwlin':
         return {
+            'train_subsample': 0,
             'tune_target': 'dev-full',
             'bidirectional': True,
             'projection_size': 200,
@@ -840,6 +870,7 @@ def get_config(experiment_name):
 
     elif experiment_name == 't512fwlin':
         return {
+            'train_subsample': 0,
             'tune_target': 'dev-full',
             'bidirectional': True,
             'projection_size': 200,
@@ -884,6 +915,7 @@ def get_config(experiment_name):
 
     elif experiment_name == 'r512fwlin':
         return {
+            'train_subsample': 0,
             'tune_target': 'dev-full',
             'bidirectional': True,
             'projection_size': 200,
@@ -928,6 +960,7 @@ def get_config(experiment_name):
 
     elif experiment_name == 't300fwlin':
         return {
+            'train_subsample': 0,
             'tune_target': 'dev-full',
             'bidirectional': True,
             'projection_size': 200,
@@ -972,6 +1005,7 @@ def get_config(experiment_name):
 
     elif experiment_name == 'r300fwlin':
         return {
+            'train_subsample': 0,
             'tune_target': 'dev-full',
             'bidirectional': True,
             'projection_size': 200,
@@ -1016,6 +1050,7 @@ def get_config(experiment_name):
 
     elif experiment_name == 't100fwlin':
         return {
+            'train_subsample': 0,
             'tune_target': 'dev-full',
             'bidirectional': True,
             'projection_size': 200,
@@ -1060,6 +1095,7 @@ def get_config(experiment_name):
 
     elif experiment_name == 'r100fwlin':
         return {
+            'train_subsample': 0,
             'tune_target': 'dev-full',
             'bidirectional': True,
             'projection_size': 200,

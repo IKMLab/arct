@@ -9,7 +9,6 @@ import os
 import glovar
 from ext import vocabulary, embeds, tokenization
 from arct import factories
-import nltk
 
 
 print('Preparing data...')

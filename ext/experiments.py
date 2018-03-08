@@ -38,16 +38,31 @@ class Experiment:
         info = 'Experiment %s:' % self.name
         info += '\n\tdataset\t%s' % self.dataset
         info += '\n\tn_results\t%s' % self.n_results
-        info += '\n\tmax\t\t%s' % self.max
-        info += '\n\tmean\t\t%s' % self.mean
-        info += '\n\tvar\t\t%s' % self.var
-        info += '\n\tci_upper\t%s' % self.ci_upper
-        info += '\n\tci_lower\t%s' % self.ci_lower
+        info += '\n\tdev max\t\t%s' % self.max
+        info += '\n\tdev mean\t\t%s' % self.mean
+        info += '\n\tdev var\t\t%s' % self.var
+        info += '\n\tdev ci_upper\t%s' % self.ci_upper
+        info += '\n\tdev ci_lower\t%s' % self.ci_lower
         info += '\n\tconfig:'
         for key in sorted(self.config.keys()):
             info += '\n\t\t%s\t%s%s' % (key,
                                         '\t' if len(key) < 8 else '',
                                         self.config[key])
+        info += '\nTraining set accuracy:'
+        info += '\n\tmean:\t%s' % np.average(
+            [x['train_acc'] for x in self.results])
+        info += '\n\tmax:\t%s' % np.max(
+            [x['train_acc'] for x in self.results])
+        info += '\nDevelopment set accuracy:'
+        info += '\n\tmean:\t%s' % np.average(
+            [x['tune_acc'] for x in self.results])
+        info += '\n\tmax:\t%s' % np.max(
+            [x['tune_acc'] for x in self.results])
+        info += '\nTesting set accuracy:'
+        info += '\n\tmean:\t%s' % np.average(
+            [x['test_acc'] for x in self.results])
+        info += '\n\tmax:\t%s' % np.max(
+            [x['test_acc'] for x in self.results])
         return info
 
     def consistent(self, config):
@@ -62,7 +77,8 @@ class Experiment:
         # Check for differences in the keysets
         local_keys = set(self.config.keys())
         candidate_keys = set(config.keys())
-        do_not_evaluate = ['seed', 'n_runs']
+        # train_subsample is a hack here...
+        do_not_evaluate = ['seed', 'n_runs', '_id', 'result', 'train_subsample']
         for x in local_keys.difference(candidate_keys):
             if x not in do_not_evaluate:
                 inconsistencies.append('%s not in candidate config.' % x)
@@ -85,11 +101,12 @@ class Experiment:
             return False
         return True
 
-    def report(self, run_no, seed, train_acc, tune_acc):
+    def report(self, run_no, seed, train_acc, tune_acc, test_acc):
         self.results.append({'run_no': run_no,
                              'seed': seed,
                              'train_acc': train_acc,
                              'tune_acc': tune_acc,
+                             'test_acc': test_acc,
                              'date': datetime.today()})
         self.n_results += 1
         tune_accs = [r['tune_acc'] for r in self.results]

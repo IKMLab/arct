@@ -10,4 +10,3 @@ class MongoDbInterface(mongo.MongoDbFacade):
         self.experiments = mongo.MongoRepository(self.db, 'experiments')
         self.grid = mongo.MongoRepository(self.db, 'grid')
         self.histories = mongo.MongoRepository(self.db, 'histories')
-
