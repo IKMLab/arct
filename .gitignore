@@ -107,7 +107,6 @@ scratch.py
 ng.py
 prep.py
 *.ipynb
-data/arct
 data/ckpts
 data/logs
 data/predictions

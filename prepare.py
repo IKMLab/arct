@@ -26,27 +26,27 @@ if not os.path.exists(os.path.join(glovar.DATA_DIR, 'predictions')):
     os.makedirs(os.path.join(glovar.DATA_DIR, 'predictions'))
 
 
-# 1. Create the Vocab
-print('Creating vocab dict..')
-if not arct.PKL.exists('vocab', ['arct']):
-    words = factories.ARCTDataFactory().wordset(tokenization.SpaCyTokenizer())
-    vocab = vocabulary.Vocab('arct', words)
-    arct.PKL.save(vocab, 'vocab', ['arct'])
-    print('Done.')
-else:
-    vocab = arct.PKL.load('vocab', ['arct'])
-    print('Already exists.')
+## 1. Create the Vocab
+##print('Creating vocab dict..')
+#if not arct.PKL.exists('vocab', ['arct']):
+#    words = factories.ARCTDataFactory().wordset(tokenization.SpaCyTokenizer())
+#    vocab = vocabulary.Vocab('arct', words)
+#    arct.PKL.save(vocab, 'vocab', ['arct'])
+#    print('Done.')
+#else:
+#    vocab = arct.PKL.load('vocab', ['arct'])
+#    print('Already exists.')
 
 
 # 2. Create GloVe embeddings
-print('Creating GloVe embeddings...')
-if not arct.PKL.exists('glove', ['arct']):
-    embeddings, oov = embeds.create_glove_embeddings(
-        vocab.ix, 300, glovar.GLOVE_PATH)
-    arct.PKL.save(embeddings, 'glove', ['arct'])
-    arct.PKL.save(oov, 'glove_oov', ['arct'])
-else:
-    print('Already exists.')
+#print('Creating GloVe embeddings...')
+#if not arct.PKL.exists('glove', ['arct']):
+#    embeddings, oov = embeds.create_glove_embeddings(
+#        vocab.ix, 300, glovar.GLOVE_PATH)
+#    arct.PKL.save(embeddings, 'glove', ['arct'])
+#    arct.PKL.save(oov, 'glove_oov', ['arct'])
+#else:
+#    print('Already exists.')
 
 
-print('Success.')
+#print('Success.')
