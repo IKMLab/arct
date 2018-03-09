@@ -107,8 +107,8 @@ class TrainFactory:
             collate_fn=collator)
 
     def experiment(self, config):
-        #if self.experiment_manager.exists(config['name']):
-        #    return self.experiment_manager.load(config)
+        if self.experiment_manager.exists(config['name']):
+            return self.experiment_manager.load(config)
         return experiments.Experiment(config.__dict__)
 
     def history(self, config, run_num):
