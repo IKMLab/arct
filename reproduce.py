@@ -47,5 +47,5 @@ df_new = pd.DataFrame(new_data)
 if os.path.exists(file_path):
     df_old = pd.read_csv(file_path)
     df_new = df_old.append(df_new)
-df_new.to_csv(file_path)
+df_new.to_csv(file_path, index=False)
 print('Success.')

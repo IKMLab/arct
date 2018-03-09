@@ -27,7 +27,9 @@ It will save the results to `data/results.csv`. It will also print the
 mean and max scores for each dataset at the end of the experiment.
 
 Note: in this repository we supply the pre-trained encoders for 512,
-and 640 encoder sizes. Those were the critical experiments.
+and 640 encoder sizes. Those were the critical experiments. The 100 and
+200 size encoders are also there, but the 1024 and 2048 are too big
+for GitHub.
 
 | experiment_name   | model   | transfer   |   encoder_size |   train_acc |   tune_acc |   test_acc |
 |:------------------|:--------|:-----------|---------------:|------------:|-----------:|-----------:|
