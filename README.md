@@ -1,27 +1,33 @@
 # NLITrans at SemEval 18 Task 12
 
-This repository holds a frozen version of the code used for our submission in SemEval 2018 Task 12: Argument Reasoning Comprehension Test, as described in our paper (TODO: link here).
+This repository holds a frozen version of the code used for our
+submission in SemEval 2018 Task 12: Argument Reasoning Comprehension
+Test, as described in our paper (TODO: link here).
 
 ## Preparing for Usage
 
 1. Required repdendencies are defined in `environment.yml`.
-2. Set the `ARCT_DIR` and `GLOVE_DIR` variables in `glovar.py` to point to the folder with the ARCT data and GloVe embeddings file. See the file for an example.
-3. We used MongoDB to store experiment results and the like. We haven't unhooked this here,
-   so you will need a local MongoDB instance running on localhost port 27017.
+2. Set the `ARCT_DIR` and `GLOVE_DIR` variables in `glovar.py` to point
+   to the folder with the ARCT data and GloVe embeddings file.
+   See `glovar.py` for an example.
+3. We used MongoDB to store experiment results and the like.
+   We haven't unhooked this here, so you will need a local MongoDB
+   instance running on localhost port 27017.
 4. Once the environment is ready you will need to run `prepare.py`
 
 ## Reproducing Our Results
 
-To reproduce any of our experiments, simply call the script `reproduce.py {name}`
-where `name` corresponds to the `experiment_name` column in the table below.
-This will perform training 20 times based on the config settings we used (stored in `configs.py`,
-according to the random seeds generated for our experiments.
-To try new random seeds add the option `--new_seeds` - e.g. `reproduce.py t512fwcomp --new_seeds`.
-It will save the results to `data/results.csv`.
-It will also print the mean and max scores for each dataset at the end of the experiment.
+To reproduce any of our experiments, simply call the script
+`reproduce.py {name}` where `name` corresponds to the `experiment_name`
+column in the table below. This will perform training 20 times based on
+the config settings we used (stored in `configs.py`, according to the
+random seeds generated for our experiments. To try new random seeds add
+the option `--new_seeds` - e.g. `reproduce.py t512fwcomp --new_seeds`.
+It will save the results to `data/results.csv`. It will also print the
+mean and max scores for each dataset at the end of the experiment.
 
-Note: in this repository we supply the pre-trained encoders for 512, and 640 encoder sizes.
-Those were the critical experiments.
+Note: in this repository we supply the pre-trained encoders for 512,
+and 640 encoder sizes. Those were the critical experiments.
 
 | experiment_name   | model   | transfer   |   encoder_size |   train_acc |   tune_acc |   test_acc |
 |:------------------|:--------|:-----------|---------------:|------------:|-----------:|-----------:|
@@ -36,7 +42,7 @@ Those were the critical experiments.
 | r300fwcomp        | Comp    | False      |            300 |    0.819169 |   0.670521 |   0.576014 |
 | t100fwcomp        | Comp    | True       |            100 |    0.814655 |   0.672969 |   0.578829 |
 | r100fwcomp        | Comp    | False      |            100 |    0.848067 |   0.679479 |   0.588851 |
-| t512fwcompc       | Comp-C   | True       |            512 |    0.826373 |   0.67026  |   0.57545  |
+| t512fwcompc       | Comp-C  | True       |            512 |    0.826373 |   0.67026  |   0.57545  |
 | t512fwcompcHalf   | Comp-C  | True       |            512 |    0.830099 |   0.63375  |   0.57545  |
 | t512fwcompcN      | Comp-C  | True       |            512 |    0.911398 |   0.654479 |   0.57545  |
 | t640fwcomprw2     | Comp-RW | True       |            640 |    0.819235 |   0.678385 |   0.580405 |
