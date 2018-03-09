@@ -66,6 +66,6 @@ class Processor:
                                % test_acc)
             trainer.logger.log('\n')
             experiment.report(run_num, seed, train_acc, best_tune_acc, test_acc)
-            self.factory.experiment_manager.save(experiment)
+            #self.factory.experiment_manager.save(experiment)
         print(experiment)
         return experiment
