@@ -28,7 +28,7 @@ experiment = processor.run_exp(config)
 
 
 print('Appending to results.csv...')
-df_old = pd.read_csv(os.path.join(glovar.DATA_DIR, 'results.csv'))
+file_path = os.path.join(glovar.DATA_DIR, 'results.csv')
 new_data = {
     'model': [],
     'encoder_size': [],
@@ -44,6 +44,8 @@ for r in experiment.results:
     new_data['tune_acc'].append(r['tune_acc'])
     new_data['test_acc'].append(r['test_acc'])
 df_new = pd.DataFrame(new_data)
-df = df_old.append(df_new)
-df.to_csv(os.path.join(glovar.DATA_DIR, 'results.csv'))
+if os.path.exists(file_path):
+    df_old = pd.read_csv(file_path)
+    df_new = df_old.append(df_new)
+df_new.to_csv(file_path)
 print('Success.')
