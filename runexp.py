@@ -22,5 +22,6 @@ config = configuration.Config(configs.get_config(name))
 config['n_runs'] = 20
 config['seed'] = seed
 config['name'] = name + '_seed_%s' % seed
+config['n_runs'] = 1
 processor = processing.Processor(arct.TRAIN_FACTORY, False)
 experiment = processor.run_exp(config)
