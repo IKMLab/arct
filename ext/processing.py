@@ -8,9 +8,10 @@ import arct
 class Processor:
     """For processing an experiment run."""
 
-    def __init__(self, factory, new_seeds):
+    def __init__(self, factory, new_seeds, seed=None):
         self.factory = factory
         self.new_seeds = new_seeds
+        self.seed = seed
         test_data = arct.DATA_FACTORY.test(None)
         collator = arct.TRAIN_FACTORY.collator({'collator': 'rnn_sent',
                                                 'tokenizer': 'spacy',
@@ -22,7 +23,9 @@ class Processor:
         self.run_exp(config)
 
     def set_seed(self, config, run_num):
-        if not self.new_seeds:
+        if self.seed is not None:
+            seed = self.seed
+        elif not self.new_seeds:
             seed = configs.get_seed(config['name'], run_num)
         else:
             seed = random.choice(range(10000))

@@ -5,6 +5,7 @@ import os
 
 
 def get_seed(experiment_name, run_num):
+    experiment_name = experiment_name.split('_seed')[0]
     df = pd.read_csv(os.path.join(glovar.DATA_DIR, 'all_results.csv'))
     exp = df[df['experiment_name'] == experiment_name]
     exp = exp[exp['run_no'] == run_num]
@@ -13,7 +14,52 @@ def get_seed(experiment_name, run_num):
 
 
 def get_config(experiment_name):
-    if experiment_name == 't2048fwcomp':
+    if experiment_name == 'compX':
+        return {
+            'train_subsample': 0,
+            'name': 'compX',
+            'stop_t_worse': 1,
+            'projection_size': 200,
+            'override': False,
+            'lr_decay_grace': 0,
+            'transfer': True,
+            'p_drop': 0.1,
+            'tokenizer': 'spacy',
+            'lr_decay_every': 0.0,
+            'target': 'train-full',
+            'seed': -1,
+            'l2': 0.0,
+            'tune_target': 'dev-full',
+            'stopping': 'min_lr',
+            'encoder_layers': 1,
+            'lr_decay_rate': 0.2,
+            'tune_encoder': True,
+            'annealing': 'tune_acc_decay',
+            'sos_eos': True,
+            'lr': 0.002,
+            'embed_size': 300,
+            'from_grid': True,
+            'encoder_size': 2048,
+            'hidden_size': 512,
+            'batch_size': 16,
+            'emb_lr_factor': 0.01,
+            'n_runs': 20,
+            'max_epochs': 200,
+            'from_grid_trans': True,
+            'embed_type': 'glove',
+            'bidirectional': True,
+            'encoder': 'lstm',
+            'collator': 'rnn_sent',
+            'model': 'comp',
+            'enc_lr_factor': 1.0,
+            'tune_embeds': True,
+            'grid_name': 'compX_grid',
+            'p_drop_rnn': 0.0,
+            'stop_lr_lim': 1e-05,
+            'transfer_name': 'e2048',
+        }
+
+    elif experiment_name == 't2048fwcomp':
         return {
             'train_subsample': 0,
             'tune_target': 'dev-full',
