@@ -34,6 +34,7 @@ new_data = {
     'model': [],
     'encoder_size': [],
     'transfer': [],
+    'seed': [],
     'train_acc': [],
     'tune_acc': [],
     'test_acc': []}
@@ -42,6 +43,7 @@ for r in experiment.results:
     new_data['model'].append(experiment.model)
     new_data['encoder_size'].append(experiment.config['encoder_size'])
     new_data['transfer'].append(experiment.config['transfer'])
+    new_data['seed'].append(r['seed'])
     new_data['train_acc'].append(r['train_acc'])
     new_data['tune_acc'].append(r['tune_acc'])
     new_data['test_acc'].append(r['test_acc'])
