@@ -30,6 +30,7 @@ experiment = processor.run_exp(config)
 print('Appending to results.csv...')
 file_path = os.path.join(glovar.DATA_DIR, 'results.csv')
 new_data = {
+    'experiment_name': [],
     'model': [],
     'encoder_size': [],
     'transfer': [],
@@ -37,6 +38,7 @@ new_data = {
     'tune_acc': [],
     'test_acc': []}
 for r in experiment.results:
+    new_data['experiment_name'].append(name)
     new_data['model'].append(experiment.model)
     new_data['encoder_size'].append(experiment.config['encoder_size'])
     new_data['transfer'].append(experiment.config['transfer'])
