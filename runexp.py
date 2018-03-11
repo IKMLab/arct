@@ -6,6 +6,9 @@ import arct
 import configs
 
 
+arct.DBI.histories.delete_all_records()
+
+
 parser = argparse.ArgumentParser()
 parser.add_argument('name',
                     type=str,
