@@ -29,36 +29,27 @@ mean and max scores for each dataset at the end of the experiment.
 Note: in this repository we supply the pre-trained encoders for 512,
 and 640 encoder sizes. Those were the critical experiments. The 100 and
 200 size encoders are also there, but the 1024 and 2048 are too big
-for GitHub.
+for GitHub. "compX" is our submission model.
 
 | experiment_name   | model   | transfer   |   encoder_size |   train_acc |   tune_acc |   test_acc |
 |:------------------|:--------|:-----------|---------------:|------------:|-----------:|-----------:|
-| t2048fwcomp       | Comp    | True       |           2048 |    0.724243 |   0.672552 |   0.560923 |
-| r2048fwcomp       | Comp    | False      |           2048 |    0.756793 |   0.668958 |   0.578153 |
-| t1024fwcomp       | Comp    | True       |           1024 |    0.780033 |   0.673906 |   0.574887 |
-| r1024fwcomp       | Comp    | False      |           1024 |    0.779005 |   0.673021 |   0.575788 |
-| t512fwcomp        | Comp    | True       |            512 |    0.874794 |   0.680104 |   0.613063 |
-| t512fwcompN       | Comp    | True       |            512 |    0.828421 |   0.680469 |   0.613063 |
-| r512fwcomp        | Comp    | False      |            512 |    0.797763 |   0.675729 |   0.569482 |
-| t300fwcomp        | Comp    | True       |            300 |    0.79324  |   0.669323 |   0.562275 |
-| r300fwcomp        | Comp    | False      |            300 |    0.819169 |   0.670521 |   0.576014 |
-| t100fwcomp        | Comp    | True       |            100 |    0.814655 |   0.672969 |   0.578829 |
-| r100fwcomp        | Comp    | False      |            100 |    0.848067 |   0.679479 |   0.588851 |
-| t512fwcompc       | Comp-C  | True       |            512 |    0.826373 |   0.67026  |   0.57545  |
-| t512fwcompcHalf   | Comp-C  | True       |            512 |    0.830099 |   0.63375  |   0.57545  |
-| t512fwcompcN      | Comp-C  | True       |            512 |    0.911398 |   0.654479 |   0.57545  |
-| t640fwcomprw2     | Comp-RW | True       |            640 |    0.819235 |   0.678385 |   0.580405 |
-| t2048fwlin        | Lin     | True       |           2048 |    0.756505 |   0.654063 |   0.538176 |
-| r2048fwlin        | Lin     | False      |           2048 |    0.726053 |   0.632708 |   0.527815 |
-| t1024fwlin        | Lin     | True       |           1024 |    0.684482 |   0.658854 |   0.523423 |
-| r1024fwlin        | Lin     | False      |           1024 |    0.708651 |   0.658958 |   0.538288 |
-| t512fwlin         | Lin     | True       |            512 |    0.668947 |   0.603594 |   0.509685 |
-| r512fwlin         | Lin     | False      |            512 |    0.721283 |   0.604844 |   0.526577 |
-| t300fwlin         | Lin     | True       |            300 |    0.639211 |   0.576406 |   0.504505 |
-| r300fwlin         | Lin     | False      |            300 |    0.69611  |   0.578542 |   0.519595 |
-| t100fwlin         | Lin     | True       |            100 |    0.57352  |   0.541458 |   0.514302 |
-| r100fwlin         | Lin     | False      |            100 |    0.575444 |   0.536094 |   0.512387 |
-
+| compX             | comp    | True       |           2048 |    0.755493 |   0.6725   |   0.592448 |
+| t2048fwcomp       | comp    | True       |           2048 |    0.721834 |   0.669635 |   0.601823 |
+| r2048fwcomp       | comp    | False      |           2048 |    0.731719 |   0.676302 |   0.604278 |
+| t1024fwcomp       | comp    | True       |           1024 |    0.808289 |   0.672969 |   0.597396 |
+| r1024fwcomp       | comp    | False      |           1024 |    0.79588  |   0.674688 |   0.601525 |
+| t512fwcomp        | comp    | True       |            512 |    0.906743 |   0.68125  |   0.645833 |
+| t512fwcompHalf    | comp    | True       |            512 |    0.856324 |   0.681406 |   0.646205 |
+| t512fwcompN       | comp    | True       |            512 |    0.854252 |   0.678646 |   0.646949 |
+| r512fwcomp        | comp    | False      |            512 |    0.806349 |   0.671771 |   0.62247  |
+| t300fwcomp        | comp    | True       |            300 |    0.781242 |   0.673177 |   0.62872  |
+| r300fwcomp        | comp    | False      |            300 |    0.775354 |   0.670885 |   0.635231 |
+| t100fwcomp        | comp    | True       |            100 |    0.84574  |   0.67651  |   0.640513 |
+| r100fwcomp        | comp    | False      |            100 |    0.833289 |   0.673073 |   0.632254 |
+| t512fwcompc       | compc   | True       |            512 |    0.839753 |   0.668854 |   0.588988 |
+| t512fwcompcHalf   | compc   | True       |            512 |    0.824128 |   0.668021 |   0.586235 |
+| t512fwcompcN      | compc   | True       |            512 |    0.909531 |   0.651302 |   0.570164 |
+| t640fwcomprw2     | comprw2 | True       |            640 |    0.824137 |   0.675156 |   0.609263 |
 
 Additionally, a csv file with all run settings (including seed) and results
 is located in `data/all_results.csv`.
