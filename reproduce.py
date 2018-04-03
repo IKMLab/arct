@@ -15,14 +15,19 @@ parser.add_argument('name',
                     help='The name of the training run / experiment')
 parser.add_argument('--new_seeds',
                     action='store_true',
+                    help='Whether or not to use new seeds')
+parser.add_argument('--n_runs',
+                    type=int,
+                    default=20,
                     help='The name of the training run / experiment')
 args = parser.parse_args()
 name = getattr(args, 'name')
 new_seeds = getattr(args, 'new_seeds')
+n_runs = getattr(args, 'n_runs')
 
 
 config = configuration.Config(configs.get_config(name))
-config['n_runs'] = 20
+config['n_runs'] = n_runs
 processor = processing.Processor(arct.TRAIN_FACTORY, new_seeds)
 experiment = processor.run_exp(config)
 print(experiment)
