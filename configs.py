@@ -286,7 +286,7 @@ def get_config(experiment_name):
 
     elif experiment_name == 't512fwcompHalf':
         return {
-            'train_subsample': 0,
+            'train_subsample': 605,
             'name': 't512fwcompHalf',
             'stop_t_worse': 1,
             'projection_size': 200,
@@ -646,7 +646,7 @@ def get_config(experiment_name):
 
     elif experiment_name == 't512fwcompcHalf':
         return {
-            'train_subsample': 0,
+            'train_subsample': 605,
             'tune_target': 'dev-full',
             'bidirectional': True,
             'projection_size': 200,
