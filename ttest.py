@@ -34,4 +34,4 @@ df1 = df1.iloc[0:take]
 df2 = df2.iloc[0:take]
 v1 = df1['test_acc'].values
 v2 = df2['test_acc'].values
-print(stats.ttest_ind(v1, v2))
+print(stats.ttest_ind(v1, v2, equal_var=False))
