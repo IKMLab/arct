@@ -43,7 +43,7 @@ The table below gives mean accuracies over 200 runs.
 | t1024fwcomp       | comp    | True       |           1024 |    0.783377 |   0.674703 |   0.602470 |
 | r1024fwcomp       | comp    | False      |           1024 |    0.786148 |   0.673453 |   0.605848 |
 | t512fwcomp        | comp    | True       |            512 |    0.880679 |   0.679781 |   0.644263 |
-| t512fwcompHalf    | comp    | True       |            512 |    0.856324 |   0.681406 |   0.646205 |
+| t512fwcompHalf    | comp    | True       |            512 |    0.892463 |   0.668260 |   0.633181 |
 | t512fwcompN       | comp    | True       |            512 |    0.910945 |   0.676214 |   0.635260 |
 | r512fwcomp        | comp    | False      |            512 |    0.797564 |   0.671818 |   0.618110 |
 | t300fwcomp        | comp    | True       |            300 |    0.811187 |   0.671240 |   0.626012 |
