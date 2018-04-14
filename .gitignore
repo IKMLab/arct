@@ -113,3 +113,5 @@ data/predictions
 data/e1024_dict_np.pkl
 data/e2048_dict_np.pkl
 data/results.csv
+data/resultsHS.csv
+data/resultsKV.csv
