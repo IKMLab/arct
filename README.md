@@ -2,7 +2,7 @@
 
 This repository holds a frozen version of the code used for our
 submission in SemEval 2018 Task 12: Argument Reasoning Comprehension
-Test, as described in our paper (TODO: link here).
+Test, as described in our paper (https://arxiv.org/abs/1804.08266).
 
 ## Preparing for Usage
 
